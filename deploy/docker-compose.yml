@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: orbi
+      POSTGRES_USER: orbi
+      POSTGRES_PASSWORD: ${ORBI_POSTGRES_PASSWORD:?set ORBI_POSTGRES_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orbi -d orbi"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - orbi-postgres:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - orbi-redis:/data
+
+  gateway:
+    user: "${ORBI_HOST_UID:?set ORBI_HOST_UID in .env}:${ORBI_HOST_GID:?set ORBI_HOST_GID in .env}"
+    build:
+      context: ..
+      dockerfile: apps/gateway/Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      ORBI_DATABASE_URL: postgresql+asyncpg://orbi:${ORBI_POSTGRES_PASSWORD:?set ORBI_POSTGRES_PASSWORD in .env}@postgres:5432/orbi
+      ORBI_REDIS_URL: redis://redis:6379/0
+      ORBI_JWT_PRIVATE_KEY_PATH: /run/secrets/orbi_jwt_private.pem
+      ORBI_JWT_PUBLIC_KEY_PATH: /run/secrets/orbi_jwt_public.pem
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../secrets/orbi_jwt_private.pem:/run/secrets/orbi_jwt_private.pem:ro
+      - ../secrets/orbi_jwt_public.pem:/run/secrets/orbi_jwt_public.pem:ro
+
+volumes:
+  orbi-postgres:
+  orbi-redis:
