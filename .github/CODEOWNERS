@@ -1,0 +1,5 @@
+* @tej-1916
+/apps/gateway/src/orbi_gateway/services/api_keys.py @tej-1916
+/apps/gateway/src/orbi_gateway/services/worker_tokens.py @tej-1916
+/apps/gateway/src/orbi_gateway/dependencies.py @tej-1916
+/SECURITY.md @tej-1916

@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose an ORBI capability or integration.
+title: "feature: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Security and provider-policy impact
+    validations:
+      required: true

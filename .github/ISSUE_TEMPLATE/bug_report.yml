@@ -1,0 +1,32 @@
+name: Bug report
+description: Report reproducible ORBI behaviour that appears incorrect.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Never include API keys, worker tokens, prompts, or production data.
+  - type: input
+    id: version
+    attributes:
+      label: ORBI version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
