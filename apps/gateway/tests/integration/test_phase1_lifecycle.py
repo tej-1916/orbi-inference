@@ -38,57 +38,65 @@ async def test_request_lifecycle_queued_assigned_completed_once() -> None:
         request_id = uuid4()
 
         async with session_factory() as session, session.begin():
-            session.add_all(
-                [
-                    Project(
-                        id=project_id,
-                        name="Integration Project",
-                        slug="integration-project",
-                        owner_id=uuid4(),
-                        daily_tokens_used=100,
-                        monthly_tokens_used=100,
-                        daily_usage_date=today,
-                        monthly_usage_month=month,
-                    ),
-                    APIKey(
-                        id=api_key_id,
-                        project_id=project_id,
-                        key_id="Integration1",
-                        display_prefix="orbi_test_v1_Integration1",
-                        secret_hash="$argon2id$v=19$m=65536,t=3,p=4$test$test",  # noqa: S106
-                        environment="test",
-                        scopes=["chat"],
-                    ),
-                    ModelAlias(
-                        alias="orbi-default",
-                        model_id="test/model",
-                        required_capabilities={"text_generation": True},
-                    ),
-                    Worker(
-                        id=worker_id,
-                        provider_type="docker",
-                        name="integration-worker",
-                        status="ONLINE",
-                        supported_models=["test/model"],
-                        capabilities={"text_generation": True},
-                    ),
-                    OrbiRequest(
-                        id=request_id,
-                        idempotency_key="integration-idempotency-key",
-                        project_id=project_id,
-                        api_key_id=api_key_id,
-                        model_alias="orbi-default",
-                        resolved_model="test/model",
-                        payload={"model": "orbi-default", "messages": []},
-                        required_capabilities={"text_generation": True},
-                        status="QUEUED",
-                        expires_at=datetime.now(UTC) + timedelta(minutes=5),
-                        reserved_tokens=100,
-                        budget_day=today,
-                        budget_month=month,
-                    ),
-                ]
+            project = Project(
+                id=project_id,
+                name="Integration Project",
+                slug="integration-project",
+                owner_id=uuid4(),
+                daily_tokens_used=100,
+                monthly_tokens_used=100,
+                daily_usage_date=today,
+                monthly_usage_month=month,
             )
+            session.add(project)
+
+            # Flush the parent project before inserting rows that reference it.
+            await session.flush()
+
+            api_key = APIKey(
+                id=api_key_id,
+                project_id=project_id,
+                key_id="Integration1",
+                display_prefix="orbi_test_v1_Integration1",
+                secret_hash="$argon2id$v=19$m=65536,t=3,p=4$test$test",  # noqa: S106
+                environment="test",
+                scopes=["chat"],
+            )
+            model_alias = ModelAlias(
+                alias="orbi-default",
+                model_id="test/model",
+                required_capabilities={"text_generation": True},
+            )
+            worker = Worker(
+                id=worker_id,
+                provider_type="docker",
+                name="integration-worker",
+                status="ONLINE",
+                supported_models=["test/model"],
+                capabilities={"text_generation": True},
+            )
+
+            session.add_all([api_key, model_alias, worker])
+
+            # Flush API key and worker before creating the queued request.
+            await session.flush()
+
+            request = OrbiRequest(
+                id=request_id,
+                idempotency_key="integration-idempotency-key",
+                project_id=project_id,
+                api_key_id=api_key_id,
+                model_alias="orbi-default",
+                resolved_model="test/model",
+                payload={"model": "orbi-default", "messages": []},
+                required_capabilities={"text_generation": True},
+                status="QUEUED",
+                expires_at=datetime.now(UTC) + timedelta(minutes=5),
+                reserved_tokens=100,
+                budget_day=today,
+                budget_month=month,
+            )
+            session.add(request)
 
         first_session = session_factory()
         second_session = session_factory()
