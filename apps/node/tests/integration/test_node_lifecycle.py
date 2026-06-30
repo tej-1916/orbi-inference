@@ -8,6 +8,9 @@ from uuid import uuid4
 
 import httpx
 import pytest
+from argon2 import PasswordHasher
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from orbi_gateway.config import get_settings as get_gateway_settings
 from orbi_gateway.main import create_app
@@ -20,7 +23,6 @@ from orbi_node.worker import OrbiWorker
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 REDIS_URL = os.getenv("TEST_REDIS_URL")
-ROOT = Path(__file__).parents[4]
 
 
 @pytest.mark.integration
@@ -31,16 +33,52 @@ ROOT = Path(__file__).parents[4]
 async def test_gateway_node_result_lifecycle(
     monkeypatch: pytest.MonkeyPatch,
     make_settings: Callable[..., object],
+    tmp_path: Path,
 ) -> None:
     assert DATABASE_URL is not None
     assert REDIS_URL is not None
+    api_key_pepper = "test-api-key-pepper-" + ("a" * 32)
+    enrollment_pepper = "test-worker-pepper-" + ("b" * 32)
+    admin_pepper = "test-admin-pepper-" + ("c" * 32)
+    admin_hash = PasswordHasher().hash(f"unused-test-admin-token:{admin_pepper}")
+
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+    private_key_path = tmp_path / "orbi-test-private.pem"
+    public_key_path = tmp_path / "orbi-test-public.pem"
+
+    private_key_path.write_bytes(
+        private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+    )
+    public_key_path.write_bytes(
+        private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+    )
+
     monkeypatch.setenv("ORBI_DATABASE_URL", DATABASE_URL)
     monkeypatch.setenv("ORBI_REDIS_URL", REDIS_URL)
+    monkeypatch.setenv("ORBI_API_KEY_PEPPER", api_key_pepper)
     monkeypatch.setenv(
-        "ORBI_JWT_PRIVATE_KEY_PATH", str(ROOT / "secrets/orbi_jwt_private.pem")
+        "ORBI_WORKER_ENROLLMENT_PEPPER",
+        enrollment_pepper,
+    )
+    monkeypatch.setenv("ORBI_ADMIN_TOKEN_HASH", admin_hash)
+    monkeypatch.setenv("ORBI_ADMIN_TOKEN_PEPPER", admin_pepper)
+    monkeypatch.setenv(
+        "ORBI_JWT_PRIVATE_KEY_PATH",
+        str(private_key_path),
     )
     monkeypatch.setenv(
-        "ORBI_JWT_PUBLIC_KEY_PATH", str(ROOT / "secrets/orbi_jwt_public.pem")
+        "ORBI_JWT_PUBLIC_KEY_PATH",
+        str(public_key_path),
     )
     get_gateway_settings.cache_clear()
     app = create_app()
