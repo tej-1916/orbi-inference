@@ -35,6 +35,7 @@ class NodeSettings(BaseSettings):
     poll_interval_seconds: float = Field(default=1.0, gt=0, le=60)
     http_timeout_seconds: float = Field(default=10.0, gt=0, le=120)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    runtime: Literal["mock", "gemma_transformers"] = "mock"
     max_http_retries: int = Field(default=3, ge=0, le=10)
     retry_base_seconds: float = Field(default=0.25, gt=0, le=30)
     retry_max_seconds: float = Field(default=10.0, gt=0, le=300)

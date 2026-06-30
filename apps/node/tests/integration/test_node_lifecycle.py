@@ -18,7 +18,7 @@ from orbi_gateway.models import APIKey, ModelAlias, OrbiRequest, Project, Worker
 from orbi_gateway.models.base import Base
 from orbi_node.client import GatewayClient
 from orbi_node.hardware import discover_capabilities
-from orbi_node.runtime import MockInferenceRuntime
+from orbi_node.runtimes.mock import MockInferenceRuntime
 from orbi_node.worker import OrbiWorker
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")

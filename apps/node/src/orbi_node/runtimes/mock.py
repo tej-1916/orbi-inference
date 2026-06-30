@@ -1,25 +1,16 @@
-"""Replaceable inference runtime and deterministic test implementation."""
+"""Deterministic, non-executing inference runtime."""
 
 import asyncio
 import hashlib
 import json
 import time
-from typing import Protocol
 
 from orbi_node.errors import NodeError
 from orbi_node.schemas import InferenceRequest, InferenceResult
 
 
-class InferenceRuntime(Protocol):
-    async def load(self) -> None: ...
-
-    async def generate(self, request: InferenceRequest) -> InferenceResult: ...
-
-    async def close(self) -> None: ...
-
-
 class MockInferenceRuntime:
-    """Deterministic, non-executing runtime with explicit test controls."""
+    """Deterministic runtime with explicit constructor-only test controls."""
 
     def __init__(
         self,

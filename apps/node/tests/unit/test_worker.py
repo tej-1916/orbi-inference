@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from orbi_node.errors import NodeError
-from orbi_node.runtime import MockInferenceRuntime
+from orbi_node.runtimes.mock import MockInferenceRuntime
 from orbi_node.schemas import (
     InferenceRequest,
     InferenceResult,

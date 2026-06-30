@@ -10,7 +10,7 @@ from orbi_node.client import GatewayClient
 from orbi_node.config import get_settings
 from orbi_node.hardware import discover_capabilities
 from orbi_node.logging import configure_logging
-from orbi_node.runtime import MockInferenceRuntime
+from orbi_node.runtimes import create_runtime
 from orbi_node.worker import OrbiWorker
 
 
@@ -21,7 +21,7 @@ async def async_main() -> None:
     worker = OrbiWorker(
         settings,
         GatewayClient(settings),
-        MockInferenceRuntime(),
+        create_runtime(settings),
         discover_capabilities(),
     )
     loop = asyncio.get_running_loop()

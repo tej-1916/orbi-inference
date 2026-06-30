@@ -10,7 +10,7 @@ from orbi_node.client import GatewayClient
 from orbi_node.config import NodeSettings
 from orbi_node.errors import AuthenticationError, NodeError, UnknownRequestError
 from orbi_node.heartbeat import HeartbeatService
-from orbi_node.runtime import InferenceRuntime
+from orbi_node.runtimes.base import InferenceRuntime
 from orbi_node.schemas import InferenceRequest, InferenceResult, WorkerCapabilities
 
 
