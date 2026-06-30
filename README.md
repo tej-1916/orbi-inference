@@ -2,14 +2,31 @@
 
 > Run open models anywhere. Serve them through one API.
 
-ORBI is an open-source distributed LLM inference control plane. Phase 1 establishes the secure
-API gateway, worker registry, durable PostgreSQL queue, idempotency boundary, budgets, and
-short-lived worker identity.
+ORBI is an open-source distributed LLM inference control plane. The control plane provides the
+secure API gateway, worker registry, durable PostgreSQL queue, idempotency boundary, budgets, and
+short-lived worker identity. Phase 2 Milestone 1 adds a deterministic local worker runtime.
 
 ## Current status
 
-This repository is at **v0.1 Phase 1 foundation**. It intentionally does not include a dashboard,
-Colab notebook, Kaggle worker, managed-provider fallback, or SDK.
+This branch contains the **Phase 2 Milestone 1 deterministic worker**. It intentionally does not
+include a real model adapter, dashboard, Colab notebook, Kaggle worker, managed-provider fallback,
+or SDK.
+
+Milestone 1 verification is complete:
+
+- Ruff passed.
+- The full PostgreSQL and Redis test run passed: `42 passed`.
+- Bandit reported zero findings and zero skipped files.
+- Docker Compose configuration validation passed.
+- PostgreSQL, Redis, gateway, and node containers ran together, and the gateway health endpoint
+  passed.
+- The node container ran as UID/GID `10002`.
+- The gateway-to-node-to-mock-runtime-to-result lifecycle passed.
+- All five GitHub Actions checks passed.
+
+See [the Phase 2 build confirmation](docs/phase-2-build-confirmation.md) for the exact verified
+results and [the worker runtime guide](docs/phase-2-worker-runtime.md) for its architecture and
+operating boundary.
 
 ## Security model
 
@@ -40,7 +57,6 @@ curl http://localhost:8000/health
 
 See `docs/phase-1-decisions.md` before contributing.
 
-
 ## Bootstrap the control plane
 
 Keep the one-time administrator token in your shell session, not in the repository:
@@ -63,5 +79,6 @@ curl -sS http://localhost:8000/admin/projects \
 ```
 
 Then create a model alias, an API key, and a one-time worker enrollment token through the
-administrative endpoints documented in `docs/api-reference.md`. The Phase 1 repository contains
-the control plane only; Colab, Kaggle, and local inference-node runtimes begin in Phase 2.
+administrative endpoints documented in `docs/api-reference.md`. After the `orbi_node_v1_` prefix,
+use exactly 12 characters for `ORBI_NODE_ENROLLMENT_ID` and the remaining 43 characters for
+`ORBI_NODE_ENROLLMENT_SECRET`. See `docs/phase-2-worker-runtime.md`.
