@@ -12,7 +12,7 @@ from orbi_node.config import NodeSettings
 from orbi_node.errors import NodeError
 from orbi_node.schemas import InferenceRequest, InferenceResult
 
-_MINIMUM_CPU_FREE_BYTES = 512 * 1024 * 1024
+_MINIMUM_CPU_FREE_BYTES = 256 * 1024 * 1024
 _MINIMUM_CUDA_FREE_BYTES = 256 * 1024 * 1024
 _ALLOWED_ROLES = frozenset({"system", "user", "assistant"})
 

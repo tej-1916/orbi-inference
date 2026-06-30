@@ -254,6 +254,30 @@ def test_cuda_preflight_rejects_unavailable_device(make_settings: Any) -> None:
     assert error.value.code == "cuda_unavailable"
 
 
+@pytest.mark.parametrize(
+    ("available_bytes", "expected_code"),
+    [
+        (None, "memory_preflight_unavailable"),
+        (128 * 1024 * 1024, "insufficient_model_memory"),
+    ],
+)
+def test_cpu_preflight_fails_closed(
+    make_settings: Any,
+    monkeypatch: pytest.MonkeyPatch,
+    available_bytes: int | None,
+    expected_code: str,
+) -> None:
+    settings = gemma_settings(make_settings)
+    runtime = GemmaTransformersRuntime(settings)
+    monkeypatch.setattr(
+        "orbi_node.runtimes.gemma_transformers._available_cpu_memory",
+        lambda: available_bytes,
+    )
+    with pytest.raises(NodeError) as error:
+        runtime._memory_preflight(fake_torch())
+    assert error.value.code == expected_code
+
+
 async def test_close_unloads_model_and_clears_cuda_cache(make_settings: Any) -> None:
     settings = gemma_settings(make_settings, device="cuda", dtype="float16")
     cuda = FakeCuda(available=True)
