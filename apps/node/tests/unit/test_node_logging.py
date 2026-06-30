@@ -9,6 +9,8 @@ def test_credentials_authorization_and_content_are_redacted() -> None:
         "enrollment_secret": "enrollment-value",
         "access_token": jwt,
         "headers": {"Authorization": f"Bearer {jwt}"},
+        "hf_token": "hf_private_token",
+        "token": "generic_private_token",
         "prompt": "private prompt",
         "nested": {
             "messages": [{"role": "user", "content": "private prompt"}],
@@ -23,6 +25,8 @@ def test_credentials_authorization_and_content_are_redacted() -> None:
         jwt,
         "private prompt",
         "private response",
+        "hf_private_token",
+        "generic_private_token",
         "s" * 43,
     ):
         assert secret not in rendered

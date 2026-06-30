@@ -50,3 +50,69 @@ def test_all_environment_settings_use_node_prefix(
     settings = NodeSettings()  # type: ignore[call-arg]
     assert str(settings.core_url) == "https://core.example/"
     assert settings.supported_models == ["one/model", "two/model"]
+    assert settings.runtime == "mock"
+    assert settings.trust_remote_code is False
+
+
+@pytest.mark.parametrize(
+    "model_id",
+    [
+        "google/not-the-supported-family",
+        "../local/gemma",
+        "https://example.test/gemma",
+        "google/gemma--2b",
+        "google/gemma.git",
+    ],
+)
+def test_invalid_model_ids_are_rejected(
+    make_settings: object,
+    model_id: str,
+) -> None:
+    with pytest.raises(ValidationError, match="valid Gemma Hub repository ID"):
+        make_settings(  # type: ignore[operator]
+            runtime="gemma_transformers",
+            model_id=model_id,
+        )
+
+
+def test_remote_model_code_cannot_be_enabled(make_settings: object) -> None:
+    with pytest.raises(ValidationError):
+        make_settings(trust_remote_code=True)  # type: ignore[operator]
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    [
+        ({"device": "cpu", "dtype": "float16"}, "CPU runtime requires float32"),
+        ({"device": "cpu", "quantization": "4bit"}, "quantization requires the CUDA"),
+        (
+            {"device": "cuda", "dtype": "float32", "quantization": "8bit"},
+            "quantization requires float16 or bfloat16",
+        ),
+    ],
+)
+def test_invalid_device_dtype_and_quantization_combinations_are_rejected(
+    make_settings: object,
+    overrides: dict[str, str],
+    message: str,
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        make_settings(**overrides)  # type: ignore[operator]
+
+
+def test_cpu_float32_without_quantization_is_valid(make_settings: object) -> None:
+    settings = make_settings(  # type: ignore[operator]
+        runtime="gemma_transformers",
+        model_id="google/gemma-2-2b-it",
+        device="cpu",
+        dtype="float32",
+        quantization="none",
+    )
+    assert settings.device == "cpu"
+
+
+def test_model_revision_must_be_an_immutable_commit(make_settings: object) -> None:
+    with pytest.raises(ValidationError, match="pinned 40-character commit hash"):
+        make_settings(model_revision="main")  # type: ignore[operator]
+    revision = "a" * 40
+    assert make_settings(model_revision=revision).model_revision == revision  # type: ignore[operator]

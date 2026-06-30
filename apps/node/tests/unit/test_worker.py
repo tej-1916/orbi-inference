@@ -163,3 +163,15 @@ async def test_controlled_runtime_failure_is_reported(
     await worker(make_settings, client, runtime).process_once()
     assert client.errors[0]["error_code"] == "model_failure"
     assert client.errors[0]["retryable"] is False
+
+
+async def test_runtime_is_unloaded_during_worker_shutdown(
+    make_settings: Callable[..., object],
+) -> None:
+    client = FakeClient(None)
+    runtime = MockInferenceRuntime()
+    await runtime.load()
+    node = worker(make_settings, client, runtime)
+    await node.close()
+    assert runtime.loaded is False
+    assert client.closed is True

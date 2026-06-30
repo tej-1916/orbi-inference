@@ -46,6 +46,7 @@ asyncio_mode = "auto"
 testpaths = ["apps/gateway/tests", "apps/node/tests"]
 markers = [
   "integration: requires PostgreSQL and Redis services",
+  "model_adapter: requires optional model dependencies and explicit network opt-in",
   "security: security-boundary tests",
 ]
 

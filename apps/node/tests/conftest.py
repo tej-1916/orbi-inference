@@ -24,6 +24,7 @@ def make_settings() -> Callable[..., NodeSettings]:
             "retry_base_seconds": 0.1,
             "retry_max_seconds": 5,
             "jwt_renewal_margin_seconds": 10,
+            "runtime": "mock",
         }
         values.update(overrides)
         return NodeSettings(**values)  # type: ignore[arg-type]

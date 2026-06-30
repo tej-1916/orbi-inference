@@ -45,8 +45,8 @@ class OrbiWorker:
 
     async def run(self) -> None:
         logger = structlog.get_logger(__name__)
-        await self._runtime.load()
         try:
+            await self._runtime.load()
             await self._tokens.enroll()
         except NodeError as exc:
             await logger.aerror("worker_start_failed", error_code=exc.code)

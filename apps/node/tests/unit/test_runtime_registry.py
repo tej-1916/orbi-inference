@@ -5,6 +5,7 @@ from collections.abc import Callable
 import pytest
 
 from orbi_node.config import NodeSettings
+from orbi_node.runtimes.gemma_transformers import GemmaTransformersRuntime
 from orbi_node.runtimes.mock import MockInferenceRuntime
 from orbi_node.runtimes.registry import create_runtime
 
@@ -22,3 +23,13 @@ def test_unsupported_runtime_is_rejected(
     object.__setattr__(settings, "runtime", "unsupported")
     with pytest.raises(ValueError, match="Unsupported node runtime"):
         create_runtime(settings)
+
+
+def test_gemma_runtime_is_selected_without_importing_model_dependencies(
+    make_settings: Callable[..., NodeSettings],
+) -> None:
+    settings = make_settings(
+        runtime="gemma_transformers",
+        model_id="google/gemma-2-2b-it",
+    )
+    assert isinstance(create_runtime(settings), GemmaTransformersRuntime)

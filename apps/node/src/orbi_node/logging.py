@@ -16,7 +16,10 @@ _SENSITIVE_KEYS = {
     "prompt",
     "messages",
     "generated_output",
+    "hf_token",
+    "huggingface_token",
     "response_text",
+    "token",
 }
 _ORBI_CREDENTIAL = re.compile(r"orbi_(?:node|live|test|admin)_v1_[A-Za-z0-9_-]+")
 _BEARER = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/-]+=*")

@@ -13,7 +13,16 @@ def _mock_runtime(_settings: NodeSettings) -> InferenceRuntime:
     return MockInferenceRuntime()
 
 
-_RUNTIME_FACTORIES: dict[str, RuntimeFactory] = {"mock": _mock_runtime}
+def _gemma_runtime(settings: NodeSettings) -> InferenceRuntime:
+    from orbi_node.runtimes.gemma_transformers import GemmaTransformersRuntime
+
+    return GemmaTransformersRuntime(settings)
+
+
+_RUNTIME_FACTORIES: dict[str, RuntimeFactory] = {
+    "mock": _mock_runtime,
+    "gemma_transformers": _gemma_runtime,
+}
 
 
 def create_runtime(settings: NodeSettings) -> InferenceRuntime:
