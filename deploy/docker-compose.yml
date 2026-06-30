@@ -12,6 +12,8 @@ services:
       retries: 20
     volumes:
       - orbi-postgres:/var/lib/postgresql/data
+    ports:
+      - "${ORBI_POSTGRES_HOST_PORT:-55432}:5432"
 
   redis:
     image: redis:7-alpine
@@ -23,6 +25,8 @@ services:
       retries: 20
     volumes:
       - orbi-redis:/data
+    ports:
+      - "${ORBI_REDIS_HOST_PORT:-56379}:6379"
 
   gateway:
     user: "${ORBI_HOST_UID:?set ORBI_HOST_UID in .env}:${ORBI_HOST_GID:?set ORBI_HOST_GID in .env}"
@@ -38,6 +42,15 @@ services:
       ORBI_JWT_PUBLIC_KEY_PATH: /run/secrets/orbi_jwt_public.pem
     ports:
       - "8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
+      interval: 2s
+      timeout: 3s
+      retries: 20
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,6 +59,25 @@ services:
     volumes:
       - ../secrets/orbi_jwt_private.pem:/run/secrets/orbi_jwt_private.pem:ro
       - ../secrets/orbi_jwt_public.pem:/run/secrets/orbi_jwt_public.pem:ro
+
+  node:
+    build:
+      context: ..
+      dockerfile: apps/node/Dockerfile
+    environment:
+      ORBI_NODE_CORE_URL: http://gateway:8000
+      ORBI_NODE_NAME: ${ORBI_NODE_NAME:-local-docker-node}
+      ORBI_NODE_PROVIDER_TYPE: docker
+      ORBI_NODE_ENROLLMENT_ID: ${ORBI_NODE_ENROLLMENT_ID:-000000000000}
+      ORBI_NODE_ENROLLMENT_SECRET: ${ORBI_NODE_ENROLLMENT_SECRET:-0000000000000000000000000000000000000000000}
+      ORBI_NODE_SUPPORTED_MODELS: ${ORBI_NODE_SUPPORTED_MODELS:-test/model}
+      ORBI_NODE_HEARTBEAT_INTERVAL_SECONDS: ${ORBI_NODE_HEARTBEAT_INTERVAL_SECONDS:-30}
+      ORBI_NODE_POLL_INTERVAL_SECONDS: ${ORBI_NODE_POLL_INTERVAL_SECONDS:-1}
+      ORBI_NODE_HTTP_TIMEOUT_SECONDS: ${ORBI_NODE_HTTP_TIMEOUT_SECONDS:-10}
+      ORBI_NODE_LOG_LEVEL: ${ORBI_NODE_LOG_LEVEL:-INFO}
+    depends_on:
+      gateway:
+        condition: service_healthy
 
 volumes:
   orbi-postgres:

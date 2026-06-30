@@ -41,23 +41,24 @@ package-dir = {"" = "apps/gateway/src"}
 where = ["apps/gateway/src"]
 
 [tool.pytest.ini_options]
-pythonpath = ["apps/gateway/src"]
+pythonpath = ["apps/gateway/src", "apps/node/src"]
 asyncio_mode = "auto"
-testpaths = ["apps/gateway/tests"]
+testpaths = ["apps/gateway/tests", "apps/node/tests"]
 markers = [
   "integration: requires PostgreSQL and Redis services",
+  "model_adapter: requires optional model dependencies and explicit network opt-in",
   "security: security-boundary tests",
 ]
 
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-src = ["apps/gateway/src", "apps/gateway/tests"]
+src = ["apps/gateway/src", "apps/gateway/tests", "apps/node/src", "apps/node/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "ASYNC", "S"]
 ignore = ["S101"]
 
 [tool.bandit]
-exclude_dirs = ["apps/gateway/tests"]
+exclude_dirs = ["apps/gateway/tests", "apps/node/tests"]
 skips = ["B101"]
