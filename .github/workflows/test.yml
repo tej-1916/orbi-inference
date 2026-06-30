@@ -35,4 +35,4 @@ jobs:
       - run: pip install -e '.[dev]'
       - run: ruff check .
       - run: pytest -q
-      - run: bandit -c pyproject.toml -r apps/gateway/src
+      - run: bandit -c pyproject.toml -r apps/gateway/src apps/node/src
